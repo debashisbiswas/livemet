@@ -40,72 +40,47 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
-const metronome = {
-    audioContext: new (window.AudioContext || window.webkitAudioContext)(),
-    clickSound: null,
-    nextNoteTime: 0,
-    timerID: null,
-    bpm: 60,
+let currentTempo = 60;
 
-    loadClickSound(url) {
-        fetch(url)
-            .then(response => response.arrayBuffer())
-            .then(arrayBuffer => this.audioContext.decodeAudioData(arrayBuffer))
-            .then(audioBuffer => {
-                this.clickSound = audioBuffer;
-            })
-            .catch(e => console.error('Error loading audio file:', e));
-    },
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-    scheduleNote() {
-        if (this.clickSound) {
-            const source = this.audioContext.createBufferSource();
-            source.buffer = this.clickSound;
-            source.connect(this.audioContext.destination);
-            source.start(this.nextNoteTime);
-        }
-    },
-
-    nextNote() {
-        const secondsPerBeat = 60.0 / this.bpm;
-        this.nextNoteTime += secondsPerBeat; // Add beat length to last beat time
-
-        // Schedule the next note
-        this.scheduleNote();
-    },
-
-    start() {
-        if (this.clickSound == null) {
-            this.loadClickSound('/audio/click.wav');
-        }
-        this.nextNoteTime = this.audioContext.currentTime;
-        this.timerID = setInterval(() => this.nextNote(), 25); // 25ms for lookahead
-    },
-
-    stop() {
-        clearInterval(this.timerID);
-        this.timerID = null;
-    },
-
-    setBPM(newBPM) {
-        this.bpm = newBPM;
+var buf = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
+var channel = buf.getChannelData(0);
+var phase = 0;
+var amp = 1;
+var duration_frames = audioContext.sampleRate / 50;
+const f = 330;
+for (var i = 0; i < duration_frames; i++) {
+    channel[i] = Math.sin(phase) * amp;
+    phase += 2 * Math.PI * f / audioContext.sampleRate;
+    if (phase > 2 * Math.PI) {
+        phase -= 2 * Math.PI;
     }
-};
+    amp -= 1 / duration_frames;
+}
+source = audioContext.createBufferSource();
+source.buffer = buf;
+source.loop = true;
+source.loopEnd = 1 / (currentTempo / 60);
+source.connect(audioContext.destination);
+source.start(0);
 
 window.addEventListener(
     "phx:toggle_event",
     ({ detail: { status } }) => {
         if (status) {
-            metronome.start()
+            audioContext.resume();
         } else {
-            metronome.stop()
+            audioContext.suspend();
         }
     }
 )
 
+// TODO: should this be an event listener locally?
 window.addEventListener(
     "phx:bpm_change",
     ({ detail: { bpm } }) => {
-        metronome.setBPM(bpm)
+        source.loopEnd = 1 / (bpm / 60);
+        currentTempo = bpm
     }
 )
