@@ -16,7 +16,6 @@ defmodule LiveMetWeb.MetronomeLive do
   def mount(_params, _session, socket) do
     if connected?(socket) do
       LiveMetWeb.Endpoint.subscribe(@topic)
-      IO.puts("Subscribed!")
     end
 
     socket =

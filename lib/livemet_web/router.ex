@@ -17,8 +17,8 @@ defmodule LiveMetWeb.Router do
   scope "/", LiveMetWeb do
     pipe_through :browser
 
-    # get "/", PageController, :home
-    live "/", MetronomeLive
+    get "/", PageController, :home
+    live "/metronome", MetronomeLive
   end
 
   # Other scopes may use custom stacks.
