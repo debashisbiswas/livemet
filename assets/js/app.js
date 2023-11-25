@@ -84,3 +84,8 @@ window.addEventListener(
         currentTempo = bpm
     }
 )
+
+document.getElementById("init").onclick = () => {
+    audioContext.resume()
+    setTimeout(() => { audioContext.suspend() }, 100)
+}

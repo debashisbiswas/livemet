@@ -9,12 +9,14 @@ defmodule LiveMetWeb.MetronomeLive do
     <.button class="p-4 border" phx-click="dec_bpm">-</.button>
     <.button class="p-4 border" phx-click="inc_bpm">+</.button>
     <.button class="p-4 border" phx-click="toggle"><%= @status %></.button>
+    <.button class="p-4 border" id="init">init</.button>
     """
   end
 
   def mount(_params, _session, socket) do
     if connected?(socket) do
       LiveMetWeb.Endpoint.subscribe(@topic)
+      IO.puts("Subscribed!")
     end
 
     socket =
@@ -28,39 +30,39 @@ defmodule LiveMetWeb.MetronomeLive do
   defp update_tempo(socket, update_function) do
     new_tempo = update_function.(socket.assigns.tempo)
     LiveMetWeb.Endpoint.broadcast(@topic, "bpm_change", %{bpm: new_tempo})
-
-    socket
-    |> assign(:tempo, new_tempo)
-    |> push_event("bpm_change", %{bpm: new_tempo})
   end
 
   def handle_event("dec_bpm", _params, socket) do
-    socket = update_tempo(socket, &(&1 - 10))
+    update_tempo(socket, &(&1 - 10))
     {:noreply, socket}
   end
 
   def handle_event("inc_bpm", _params, socket) do
-    socket = update_tempo(socket, &(&1 + 10))
+    update_tempo(socket, &(&1 + 10))
     {:noreply, socket}
   end
 
   def handle_event("toggle", _params, socket) do
     new_status = !socket.assigns.status
-
-    socket =
-      socket
-      |> assign(:status, new_status)
-      |> push_event("toggle_event", %{status: new_status})
-
     LiveMetWeb.Endpoint.broadcast(@topic, "status_change", %{playing: new_status})
     {:noreply, socket}
   end
 
   def handle_info(%{payload: %{bpm: new_tempo}}, socket) do
-    {:noreply, assign(socket, :tempo, new_tempo)}
+    socket =
+      socket
+      |> assign(:tempo, new_tempo)
+      |> push_event("bpm_change", %{bpm: new_tempo})
+
+    {:noreply, socket}
   end
 
   def handle_info(%{payload: %{playing: new_status}}, socket) do
-    {:noreply, assign(socket, :status, new_status)}
+    socket =
+      socket
+      |> assign(:status, new_status)
+      |> push_event("toggle_event", %{status: new_status})
+
+    {:noreply, socket}
   end
 end
