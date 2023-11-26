@@ -21,6 +21,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import { Metronome } from "./metronome"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
@@ -40,39 +41,12 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
-let currentTempo = 60;
-
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-var buf = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
-var channel = buf.getChannelData(0);
-var phase = 0;
-var amp = 1;
-var duration_frames = audioContext.sampleRate / 50;
-const f = 330;
-for (var i = 0; i < duration_frames; i++) {
-    channel[i] = Math.sin(phase) * amp;
-    phase += 2 * Math.PI * f / audioContext.sampleRate;
-    if (phase > 2 * Math.PI) {
-        phase -= 2 * Math.PI;
-    }
-    amp -= 1 / duration_frames;
-}
-source = audioContext.createBufferSource();
-source.buffer = buf;
-source.loop = true;
-source.loopEnd = 1 / (currentTempo / 60);
-source.connect(audioContext.destination);
-source.start(0);
+const metronome = new Metronome(60)
 
 window.addEventListener(
     "phx:toggle_event",
     ({ detail: { status } }) => {
-        if (status) {
-            audioContext.resume();
-        } else {
-            audioContext.suspend();
-        }
+        metronome.setStatus(status)
     }
 )
 
@@ -80,12 +54,6 @@ window.addEventListener(
 window.addEventListener(
     "phx:bpm_change",
     ({ detail: { bpm } }) => {
-        source.loopEnd = 1 / (bpm / 60);
-        currentTempo = bpm
+        metronome.setTempo(bpm)
     }
 )
-
-document.getElementById("init").onclick = () => {
-    audioContext.resume()
-    setTimeout(() => { audioContext.suspend() }, 100)
-}

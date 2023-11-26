@@ -9,7 +9,6 @@ defmodule LiveMetWeb.MetronomeLive do
     <.button class="p-4 border" phx-click="dec_bpm">-</.button>
     <.button class="p-4 border" phx-click="inc_bpm">+</.button>
     <.button class="p-4 border" phx-click="toggle"><%= @status %></.button>
-    <.button class="p-4 border" id="init">init</.button>
     """
   end
 
