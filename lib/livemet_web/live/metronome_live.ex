@@ -5,10 +5,26 @@ defmodule LiveMetWeb.MetronomeLive do
 
   def render(assigns) do
     ~H"""
-    <.header class="text-xl"><%= @tempo %> BPM</.header>
-    <.button class="p-4 border" phx-click="dec_bpm">-</.button>
-    <.button class="p-4 border" phx-click="inc_bpm">+</.button>
-    <.button class="p-4 border" phx-click="toggle"><%= @status %></.button>
+    <div class="w-1/3">
+      <h1 class="text-center text-9xl tracking-tight">
+        <%= @tempo %><span class="text-xl font-normal tracking-normal">BPM</span>
+      </h1>
+
+      <div class="flex mt-8 space-x-6">
+        <.button class="p-4 border flex-grow" phx-click="dec_bpm">-</.button>
+        <.button class="p-4 border flex-grow" phx-click="inc_bpm">+</.button>
+      </div>
+
+      <div class="flex mt-8 space-x-6">
+        <.button class="p-4 border w-100 flex-grow" phx-click="toggle">
+          <%= if @status do %>
+            Playing
+          <% else %>
+            Stopped
+          <% end %>
+        </.button>
+      </div>
+    </div>
     """
   end
 
