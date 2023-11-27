@@ -50,7 +50,6 @@ window.addEventListener(
     }
 )
 
-// TODO: should this be an event listener locally?
 window.addEventListener(
     "phx:bpm_change",
     ({ detail: { bpm } }) => {
